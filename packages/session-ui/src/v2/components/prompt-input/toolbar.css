@@ -1,0 +1,6 @@
+/* Tooltip triggers wrap each toolbar control in a flex div whose min-width defaults to auto, so the
+   model button could never shrink below its max width. On narrow phones it slid under the submit
+   button and took its taps. Letting the wrappers shrink keeps the label truncating instead. */
+[data-component="prompt-input-v2"] [data-component="tooltip-v2-trigger"] {
+  min-width: 0;
+}
