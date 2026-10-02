@@ -148,3 +148,18 @@
     transform: translateX(-50%);
   }
 }
+
+/* Without hover (touch screens) the close button is always shown via hover-reveal, but the title layout
+   above only makes room for it on hovered or active tabs, so inactive tabs drew the x over their title.
+   Reserve the close button's space on every tab and use the wider fade. */
+@media (hover: none) {
+  [data-titlebar-tab]:not([data-editing="true"]) [data-slot="tab-link"],
+  [data-titlebar-tab][data-title-overflow="true"]:not(:hover):not([data-active="true"]):not([data-editing="true"])
+    [data-slot="tab-link"] {
+    padding-inline-end: 22px;
+  }
+
+  [data-titlebar-tab][data-title-overflow="true"]:not([data-editing="true"]) [data-slot="tab-link"] {
+    --tab-title-fade-offset: 24px;
+  }
+}
