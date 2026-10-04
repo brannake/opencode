@@ -1,3 +1,4 @@
+import { writeClipboard } from "@opencode-ai/ui/write-clipboard"
 import { type ComponentProps, createMemo, Show, splitProps } from "solid-js"
 import { createStore } from "solid-js/store"
 import { Card, CardDescription } from "@opencode-ai/ui/card"
@@ -89,7 +90,7 @@ export function ToolErrorCard(props: ToolErrorCardProps) {
   const copy = async () => {
     const text = cleaned()
     if (!text) return
-    await navigator.clipboard.writeText(text)
+    if (!(await writeClipboard(text))) return
     setState("copied", true)
     setTimeout(() => setState("copied", false), 2000)
   }

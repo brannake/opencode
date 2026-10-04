@@ -1,3 +1,4 @@
+import { writeClipboard } from "./write-clipboard"
 import { TextField as Kobalte } from "@kobalte/core/text-field"
 import { createSignal, Show, splitProps } from "solid-js"
 import type { ComponentProps } from "solid-js"
@@ -69,7 +70,7 @@ export function TextField(props: TextFieldProps) {
 
   async function handleCopy() {
     const value = local.value ?? local.defaultValue ?? ""
-    await navigator.clipboard.writeText(value)
+    if (!(await writeClipboard(value))) return
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }

@@ -1,3 +1,4 @@
+import { writeClipboard } from "@opencode-ai/ui/write-clipboard"
 import {
   createEffect,
   createMemo,
@@ -708,22 +709,13 @@ export function MessageTimeline(props: {
   const copyShareUrl = () => {
     const url = shareUrl()
     if (!url) return
-    void navigator.clipboard
-      .writeText(url)
-      .then(() =>
-        showToast({
-          variant: "success",
-          icon: "circle-check",
-          title: language.t("session.share.copy.copied"),
-          description: url,
-        }),
-      )
-      .catch((err: unknown) =>
-        showToast({
-          title: language.t("common.requestFailed"),
-          description: errorMessage(err),
-        }),
-      )
+    void writeClipboard(url).then((copied) =>
+      showToast(
+        copied
+          ? { variant: "success", icon: "circle-check", title: language.t("session.share.copy.copied"), description: url }
+          : { title: language.t("common.requestFailed") },
+      ),
+    )
   }
   const selectShareUrlText: JSX.EventHandler<HTMLDivElement, MouseEvent> = (event) => {
     const selection = window.getSelection()

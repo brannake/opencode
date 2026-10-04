@@ -1,3 +1,4 @@
+import { writeClipboard } from "@opencode-ai/ui/write-clipboard"
 import { createEffect, createMemo } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useLanguage } from "@/context/language"
@@ -202,17 +203,15 @@ export function useOpenInApp(input: { directory: () => string }) {
   const copyPath = () => {
     const directory = input.directory()
     if (!directory) return
-    navigator.clipboard
-      .writeText(directory)
-      .then(() => {
-        showToast({
-          variant: "success",
-          icon: "circle-check",
-          title: language.t("session.share.copy.copied"),
-          description: directory,
-        })
+    void writeClipboard(directory).then((copied) => {
+      if (!copied) return showToast({ title: language.t("common.requestFailed") })
+      showToast({
+        variant: "success",
+        icon: "circle-check",
+        title: language.t("session.share.copy.copied"),
+        description: directory,
       })
-      .catch((err: unknown) => showRequestError(language, err))
+    })
   }
 
   return {

@@ -1,3 +1,4 @@
+import { writeClipboard } from "@opencode-ai/ui/write-clipboard"
 import { AppIcon } from "@opencode-ai/ui/app-icon"
 import { Button } from "@opencode-ai/ui/button"
 import { DropdownMenu } from "@opencode-ai/ui/dropdown-menu"
@@ -268,17 +269,15 @@ export function SessionHeader() {
   const copyPath = () => {
     const directory = projectDirectory()
     if (!directory) return
-    navigator.clipboard
-      .writeText(directory)
-      .then(() => {
-        showToast({
-          variant: "success",
-          icon: "circle-check",
-          title: language.t("session.share.copy.copied"),
-          description: directory,
-        })
+    void writeClipboard(directory).then((copied) => {
+      if (!copied) return showToast({ title: language.t("common.requestFailed") })
+      showToast({
+        variant: "success",
+        icon: "circle-check",
+        title: language.t("session.share.copy.copied"),
+        description: directory,
       })
-      .catch((err: unknown) => showRequestError(language, err))
+    })
   }
 
   const [centerMount, setCenterMount] = createSignal<HTMLElement | null>(null)
