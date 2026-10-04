@@ -22,10 +22,27 @@ function blobUrl(id: string, blob: Blob) {
 }
 
 async function blobID(blob: Blob) {
-  const id = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", await blob.arrayBuffer())))
+  const bytes = new Uint8Array(await blob.arrayBuffer())
+  // crypto.subtle only exists in secure contexts (HTTPS or localhost). Served over plain http on a LAN
+  // or Tailscale address it is undefined, and every attachment failed with "reading 'digest'". The ID
+  // only has to be a stable content key, so fall back to a fast non-cryptographic hash there.
+  if (!globalThis.crypto?.subtle) return contentHash(bytes)
+  return Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)))
     .map((byte) => byte.toString(16).padStart(2, "0"))
     .join("")
-  return id
+}
+
+// cyrb53-style 2x32-bit hash over the bytes, plus the length; prefixed so it can never equal a SHA-256 hex id
+function contentHash(bytes: Uint8Array) {
+  let h1 = 0xdeadbeef ^ bytes.length
+  let h2 = 0x41c6ce57 ^ bytes.length
+  for (const byte of bytes) {
+    h1 = Math.imul(h1 ^ byte, 2654435761)
+    h2 = Math.imul(h2 ^ byte, 1597334677)
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909)
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909)
+  return `nc-${(h2 >>> 0).toString(16).padStart(8, "0")}${(h1 >>> 0).toString(16).padStart(8, "0")}-${bytes.length.toString(16)}`
 }
 
 export async function createBlobReference(blob: Blob): Promise<BlobReference> {

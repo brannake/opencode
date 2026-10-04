@@ -222,10 +222,29 @@ export function createPromptInputV2Attachments(
 const imageMimes = new Set(["image/png", "image/jpeg", "image/gif", "image/webp"])
 
 async function blobReference(file: File) {
-  const id = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", await file.arrayBuffer())))
-    .map((byte) => byte.toString(16).padStart(2, "0"))
-    .join("")
+  const bytes = new Uint8Array(await file.arrayBuffer())
+  // crypto.subtle is missing outside secure contexts (plain http on a LAN or Tailscale address), which
+  // made every attachment fail with "reading 'digest'". The id is only a content key, so fall back to
+  // a fast non-cryptographic hash there.
+  const id = globalThis.crypto?.subtle
+    ? Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)))
+        .map((byte) => byte.toString(16).padStart(2, "0"))
+        .join("")
+    : contentHash(bytes)
   return { id, url: URL.createObjectURL(file) }
+}
+
+// cyrb53-style 2x32-bit hash over the bytes, plus the length; prefixed so it can never equal a SHA-256 hex id
+function contentHash(bytes: Uint8Array) {
+  let h1 = 0xdeadbeef ^ bytes.length
+  let h2 = 0x41c6ce57 ^ bytes.length
+  for (const byte of bytes) {
+    h1 = Math.imul(h1 ^ byte, 2654435761)
+    h2 = Math.imul(h2 ^ byte, 1597334677)
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909)
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909)
+  return `nc-${(h2 >>> 0).toString(16).padStart(8, "0")}${(h1 >>> 0).toString(16).padStart(8, "0")}-${bytes.length.toString(16)}`
 }
 const imageExtensions = new Map([
   ["gif", "image/gif"],
