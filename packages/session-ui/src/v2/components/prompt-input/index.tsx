@@ -226,22 +226,29 @@ export function PromptInputV2(props: PromptInputV2Props) {
                 />
               )}
             </Show>
-            <Show
-              when={props.modelControl}
-              fallback={
-                <Show when={view.model} keyed>
-                  {(control) => (
-                    <PromptInputV2ConfiguredSelect
-                      title={i18n.t("ui.promptInput.chooseModel")}
-                      keybind={["Mod", "M"]}
-                      control={control}
-                      model
-                    />
-                  )}
+            {/* The model name is the long label, so it alone absorbs a narrow toolbar: basis 0 makes it
+                take only the space left over (down to icon + chevron, up to its natural width), which
+                keeps the short agent/variant labels whole instead of truncating every label a little. */}
+            <Show when={props.modelControl || view.model}>
+              <div class="flex min-w-15 max-w-fit grow basis-0">
+                <Show
+                  when={props.modelControl}
+                  fallback={
+                    <Show when={view.model} keyed>
+                      {(control) => (
+                        <PromptInputV2ConfiguredSelect
+                          title={i18n.t("ui.promptInput.chooseModel")}
+                          keybind={["Mod", "M"]}
+                          control={control}
+                          model
+                        />
+                      )}
+                    </Show>
+                  }
+                >
+                  {props.modelControl}
                 </Show>
-              }
-            >
-              {props.modelControl}
+              </div>
             </Show>
             <Show when={(props.variantControlVisible ?? true) && view.variant} keyed>
               {(control) => (
@@ -485,6 +492,7 @@ export function PromptInputV2AddMenu(props: {
   return (
     <TooltipV2
       placement="top"
+      class="shrink-0"
       value={
         <>
           {props.title}
@@ -574,7 +582,7 @@ export function PromptInputV2Select(props: {
           as={ButtonV2}
           variant="ghost-muted"
           size="normal"
-          class={`max-w-[220px] justify-start ![font-weight:440] ${props.class ?? ""}`}
+          class={`max-w-[220px] min-w-0 justify-start ![font-weight:440] ${props.class ?? ""}`}
           aria-label={props.title}
         >
           {props.currentIcon}
